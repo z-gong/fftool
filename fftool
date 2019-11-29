@@ -2014,21 +2014,20 @@ class system(object):
                 f.write('# fix TSTDR DRUDES nvt temp 1 1 25\n')
                 f.write('# fix DTINV all drude/transform/inverse\n\n')
 
-                f.write('thermo_style custom step cpu etotal ke pe '
-                        'evdwl v_elec c_TDRUDE[1] press vol density '
-                        'c_TDRUDE[2]\n')
+                f.write('thermo_style custom step cpu c_TDRUDE[1] press pe '
+                        'evdwl v_elec vol density c_TDRUDE[2]\n')
             else:
                 f.write('velocity all create ${TK} 12345\n\n')
 
                 f.write('fix TPSTAT all npt temp ${TK} ${TK} 100 '
                         'iso ${PBAR} ${PBAR} 1000\n\n')
 
-                f.write('thermo_style custom step cpu etotal ke pe '
-                        'evdwl v_elec temp press vol density\n')
+                f.write('thermo_style custom step cpu temp press pe '
+                        'evdwl v_elec vol density\n')
             f.write('thermo 100\n\n')
 
             f.write('dump TRAJ all custom 10000 dump.lammpstrj '
-                    'id mol type element q x y z ix iy iz\n')
+                    'id mol type element q xu yu zu\n')
             f.write('dump_modify TRAJ sort id element %s %s\n' %(
                     ' '.join([att.symbol for att in self.attype]),
                     ' '.join(['D'] * len(self.attype_drude))))
