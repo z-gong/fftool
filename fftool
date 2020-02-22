@@ -155,10 +155,7 @@ class atom(object):
         self.type = name                  # equivalent atom type for bonded interactions, in str
         self.symbol = atomic_symbol(name)
         self.ityp = -1                    # atom type index for this atom starts from 0
-        if m == 0.0:
-            self.m = atomic_weight(self.name)
-        else:
-            self.m = m
+        self.m = m
         self.q = 0.0
         self.pot = ''                     # non-bonded potential function, like 'lj'
         self.par = []                     # non-bonded potential parameters, [epsilon, sigma]
@@ -2822,6 +2819,10 @@ class system(object):
 
             f.write('\nEND\n')
 
+    def writeomm(self):
+        self.write_gro()
+        self.write_psf_prm()
+
     def write_gro(self):
         random.seed(1)
         with open('conf.gro', 'w') as f:
@@ -2946,6 +2947,9 @@ def main():
     parser.add_argument('-n', '--namd', action = 'store_true',
                         help = 'save NAMD input files'
                         '(needs simbox.xyz built using Packmol)')
+    parser.add_argument('-n', '--omm', action = 'store_true',
+                        help = 'save OpenMM input files'
+                               '(needs simbox.xyz built using Packmol)')
     parser.add_argument('-d', '--dlpoly', action = 'store_true',
                         help = 'save DLPOLY input files '\
                         '(needs simbox.xyz built using Packmol)')
@@ -3009,7 +3013,7 @@ def main():
     rho = nmol / (box.vol * 1.0e-27 * 6.022e+23)
     print('density {0:.3f} mol/L  volume {1:.1f} A^3'.format(rho, box.vol))
 
-    if args.lammps or args.gmx or args.dlpoly or args.namd:
+    if args.lammps or args.gmx or args.dlpoly or args.namd or args.omm:
         connect = True
     else:
         connect = False
@@ -3031,7 +3035,7 @@ def main():
         print('  {0:20s} {1:5d}  {2:5s} {3:+8.4f} {4:8.4f}'.format(sp.name,
               sp.nmol, sp.topol, sp.charge(), sp.alpha))
 
-    if not (args.lammps or args.gmx or args.dlpoly or args.namd):
+    if not (args.lammps or args.gmx or args.dlpoly or args.namd or args.omm):
         print('packmol file\n  pack.inp')
         sim.writepackmol('pack.inp', 'simbox.xyz', args.tol, args.tol / 2)
     else:
@@ -3058,6 +3062,9 @@ def main():
     if args.namd:
         print('namd files\n  run.inp\n  topol.psf\n  ff.prm\n  config.pdb')
         sim.writenamd()
+    if args.omm:
+        print('openmm files\n  topol.psf\n  ff.prm\n  conf.gro')
+        sim.writeomm()
 
 if __name__ == '__main__':
     main()
