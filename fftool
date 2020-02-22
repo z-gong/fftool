@@ -2947,7 +2947,7 @@ def main():
     parser.add_argument('-n', '--namd', action = 'store_true',
                         help = 'save NAMD input files'
                         '(needs simbox.xyz built using Packmol)')
-    parser.add_argument('-n', '--omm', action = 'store_true',
+    parser.add_argument('-o', '--omm', action = 'store_true',
                         help = 'save OpenMM input files'
                                '(needs simbox.xyz built using Packmol)')
     parser.add_argument('-d', '--dlpoly', action = 'store_true',
