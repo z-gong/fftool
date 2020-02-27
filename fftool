@@ -2000,8 +2000,8 @@ class system(object):
                 f.write('comm_modify vel yes\n')
                 f.write('compute TDRUDE all temp/drude\n\n')
 
-                f.write('fix TGNPT all tgnpt/drude ${TK} ${TK} 100 1 25 iso ${PBAR} ${PBAR} 1000\n\n')
-                f.write('# fix TSTAT all langevin/drude ${TK} 200 12345 1 50 23456\n')
+                f.write('fix NPT all tgnpt/drude temp ${TK} ${TK} 100 1 25 iso ${PBAR} ${PBAR} 1000\n\n')
+                f.write('# fix SD  all langevin/drude ${TK} 200 12345 1 50 23456\n')
                 f.write('# fix NPH all nph iso ${PBAR} ${PBAR} 1000\n\n')
 
                 f.write('thermo_style custom step cpu c_TDRUDE[1] c_TDRUDE[2] c_TDRUDE[3] c_TDRUDE[4] '
