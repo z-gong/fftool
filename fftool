@@ -1960,7 +1960,7 @@ class system(object):
             f.write('# thermo 10\n')
             f.write('# minimize 1.0e-4 1.0e-6 1000 1000\n')
             f.write('# write_data data.em.lmp\n')
-            f.write('# reset_timestep 0\n\n')
+            f.write('# quit\n\n')
 
             shakebd = shakean = False
             for bdt in self.bdtype:
@@ -1994,28 +1994,19 @@ class system(object):
             f.write('variable PBAR equal 1.0\n')
             f.write('variable elec equal ecoul+elong\n\n')
 
-            if self.is_drude:
-                f.write('velocity ATOMS create ${TK} 12345\n')
-                f.write('velocity DRUDES create 1 23456\n\n')
+            f.write('velocity all create ${TK} 12345\n\n')
 
+            if self.is_drude:
                 f.write('comm_modify vel yes\n')
                 f.write('compute TDRUDE all temp/drude\n\n')
 
-                f.write('fix TSTAT all langevin/drude ${TK} 200 12345 1 50 23456\n')
-                f.write('fix NPH all nph iso ${PBAR} ${PBAR} 1000\n\n')
+                f.write('fix TGNPT all tgnpt/drude ${TK} ${TK} 100 1 25 iso ${PBAR} ${PBAR} 1000\n\n')
+                f.write('# fix TSTAT all langevin/drude ${TK} 200 12345 1 50 23456\n')
+                f.write('# fix NPH all nph iso ${PBAR} ${PBAR} 1000\n\n')
 
-                f.write('# compute TATOM ATOMS temp\n')
-                f.write('# fix DTDIR all drude/transform/direct\n')
-                f.write('# fix TSTAT ATOMS npt temp ${TK} ${TK} 100 iso ${PBAR} ${PBAR} 1000\n')
-                f.write('# fix_modify TSTAT temp TATOM press thermo_press\n')
-                f.write('# fix TSTDR DRUDES nvt temp 1 1 25\n')
-                f.write('# fix DTINV all drude/transform/inverse\n\n')
-
-                f.write('thermo_style custom step cpu c_TDRUDE[1] press pe '
-                        'evdwl v_elec vol density c_TDRUDE[2]\n')
+                f.write('thermo_style custom step cpu c_TDRUDE[1] c_TDRUDE[2] c_TDRUDE[3] c_TDRUDE[4] '
+                        'press pe evdwl v_elec density\n')
             else:
-                f.write('velocity all create ${TK} 12345\n\n')
-
                 f.write('fix TPSTAT all npt temp ${TK} ${TK} 100 '
                         'iso ${PBAR} ${PBAR} 1000\n\n')
 
@@ -2028,8 +2019,8 @@ class system(object):
             f.write('dump_modify TRAJ sort id element %s %s\n' %(
                     ' '.join([att.symbol for att in self.attype]),
                     ' '.join(['D'] * len(self.attype_drude))))
-            f.write('dump XTC all xtc 1000 dump.xtc\n')
-            f.write('dump_modify XTC unwrap yes\n\n')
+            f.write('# dump XTC all xtc 1000 dump.xtc\n')
+            f.write('# dump_modify XTC unwrap yes\n\n')
 
             f.write('variable t equal time\n')
             f.write('compute MSD all msd com yes\n')
@@ -2053,8 +2044,7 @@ class system(object):
             f.write('unfix TPSTAT\n')
             f.write('fix TSTAT all nvt temp ${TK} ${TK} 100\n\n')
 
-            f.write('run 10000\n\n')
-
+            f.write('run 10000\n')
             f.write('write_data data.eq.lmp\n')
 
         random.seed(1)
@@ -2572,7 +2562,7 @@ class system(object):
                             .format(self.x[i], self.y[i], self.z[i]))
                         i += 1
 
-    def writenamd(self):
+    def write_namd(self):
         self.write_pdb()
         self.write_psf_prm()
 
@@ -2819,7 +2809,7 @@ class system(object):
 
             f.write('\nEND\n')
 
-    def writeomm(self):
+    def write_omm(self):
         self.write_gro()
         self.write_psf_prm()
 
@@ -3061,10 +3051,10 @@ def main():
         sim.writedlp(args.cos4)
     if args.namd:
         print('namd files\n  run.inp\n  topol.psf\n  ff.prm\n  config.pdb')
-        sim.writenamd()
+        sim.write_namd()
     if args.omm:
         print('openmm files\n  topol.psf\n  ff.prm\n  conf.gro')
-        sim.writeomm()
+        sim.write_omm()
 
 if __name__ == '__main__':
     main()
