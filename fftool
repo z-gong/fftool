@@ -1473,18 +1473,36 @@ class Monomer():
         return '<Monomer: %s>' %self.name
 
 class Dimer():
-    def __init__(self, m1, m2, distance):
+    C0 = 0.25
+    C1 = 0.11
+
+    def __init__(self, m1, m2, distance, scale_factor=None):
+        '''
+        If scale factor is None, then need to calculate scale factor later
+        based on charge, dipole, polarizability and distance of monomers
+        '''
         self.monomer1 = m1
         self.monomer2 = m2
         self.distance = distance
+        self.scale_factor = scale_factor
 
     def __repr__(self):
         return '<Dimer: %s %s>' % (self.monomer1.name, self.monomer2.name)
 
-class LJScaler():
-    C0 = 0.25
-    C1 = 0.11
+    def predict_scale_factor(self):
+        m1, m2 = self.monomer1, self.monomer2
+        if (m1.charge != 0 or m1.dipole != 0) and m1.alpha == -1:
+            print('  error: alpha required for charged or polar fragment: %s' % m1.name)
+            sys.exit(1)
+        if (m2.charge != 0 or m2.dipole != 0) and m2.alpha == -1:
+            print('  error: alpha required for charged or polar fragment: %s' % m2.name)
+            sys.exit(1)
 
+        k = self.C0 * self.distance ** 2 * (m1.charge ** 2 / m1.alpha + m2.charge ** 2 / m2.alpha) + \
+            self.C1 * (m1.dipole ** 2 / m1.alpha + m2.dipole ** 2 / m2.alpha)
+        self.scale_factor = round(1 / (1 + k), 3)
+
+class LJScaler():
     def __init__(self):
         self.monomers = []
         self.dimers = []
@@ -1521,11 +1539,19 @@ class LJScaler():
             elif section == 'DIMERS':
                 m1 = filter(lambda x: x.name==words[0], self.monomers).__next__()
                 m2 = filter(lambda x: x.name==words[1], self.monomers).__next__()
-                self.dimers.append(Dimer(m1, m2, float(words[2])))
+                scale = None
+                if len(words) > 3:
+                    scale = float(words[3])
+                self.dimers.append(Dimer(m1, m2, float(words[2]), scale))
 
             elif section == 'ATOMS':
                 monomer = filter(lambda x: x.name==words[0], self.monomers).__next__()
                 monomer.atoms = words[1:]
+
+        for dimer in self.dimers:
+            if dimer.scale_factor is None:
+                dimer.predict_scale_factor()
+
 
     def pred_scale_factor(self, atom1, atom2):
         '''
@@ -1560,18 +1586,7 @@ class LJScaler():
                 m1.name, m2.name, atom1, atom2))
             return -1
 
-        if (m1.charge != 0 or m1.dipole != 0) and m1.alpha == -1:
-            print('  error: alpha required for charged or polar fragment: %s' % m1.name)
-            sys.exit(1)
-
-        if (m2.charge != 0 or m2.dipole != 0) and m2.alpha == -1:
-            print('  error: alpha required for charged or polar fragment: %s' % m2.name)
-            sys.exit(1)
-
-        k = self.C0 * dimer.distance**2 *(m1.charge**2 / m1.alpha +
-                                          m2.charge**2 / m2.alpha)+ \
-            self.C1 * (m1.dipole ** 2 / m1.alpha + m2.dipole ** 2 / m2.alpha)
-        return round(1 / (1+k), 3)
+        return dimer.scale_factor
 
     def scale_eps(self, term):
         k = self.pred_scale_factor(term.i, term.j)

@@ -9,9 +9,11 @@ c2c1im+      1       1.1558      12.38
 dca-        -1       0.8874       8.268
 
 DIMERS
-# monomer1 monomer2 COM_distance/Å
-DMSO        DMSO        3.5
-C4H10       C4H10       4.170
+# monomer1 monomer2 COM_distance/Å predefined_scale_factor
+# if scale factor is provided, then LJ between monomer will be scaled by this value
+# otherwise, the scale factor will be calculated based on charge, dipole, polarizability and distance between  monomers
+DMSO        DMSO        3.5           0.68
+C4H10       C4H10       4.170         1.0
 C4H10       DMSO        3.8
 c2c1im      dca         2.935
 c2c1im      C4H10       3.613
