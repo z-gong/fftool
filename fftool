@@ -1878,7 +1878,8 @@ class system(object):
     def writelmp(self):
         ecnv = kCal
         with open('in.lmp', 'w') as f:
-            f.write('# created by fftool\n')
+            f.write('# created by fftool\n\n')
+            f.write('units real\n')
             f.write('boundary p p p\n')
             f.write('atom_style full\n')
             if self.nbond:
