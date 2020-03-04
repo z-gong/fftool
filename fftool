@@ -1564,7 +1564,7 @@ class LJScaler():
                 m1 = monomer
                 break
         else:
-            print('  error in predicting scaling factor: atom not recognized: %s' % atom1.name)
+            print('  error in predicting scaling factor: atom not recognized: %s' % atom1)
             sys.exit(1)
 
         for monomer in self.monomers:
@@ -1572,7 +1572,7 @@ class LJScaler():
                 m2 = monomer
                 break
         else:
-            print('  error in predicting scaling factor: atom not recognized: %s' % atom2.name)
+            print('  error in predicting scaling factor: atom not recognized: %s' % atom2)
             sys.exit(1)
 
         for di in self.dimers:
