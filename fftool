@@ -1466,7 +1466,7 @@ class Monomer():
         self.name = name
         self.charge = charge
         self.dipole = dipole
-        self.alpha = alpha
+        self.alpha = alpha  # can be None if not provided
         self.atoms = []  # list of atom names
 
     def __repr__(self):
@@ -1491,10 +1491,12 @@ class Dimer():
 
     def predict_scale_factor(self):
         m1, m2 = self.monomer1, self.monomer2
-        if (m1.charge != 0 or m1.dipole != 0) and m1.alpha == -1:
-            print('  warning: alpha required for charged or polar fragment: %s' % m1.name)
-        if (m2.charge != 0 or m2.dipole != 0) and m2.alpha == -1:
-            print('  warning: alpha required for charged or polar fragment: %s' % m2.name)
+        if (m1.charge != 0 or m1.dipole != 0) and m1.alpha is None:
+            print('  error in predicting scaling factor: alpha required for charged or polar fragment: %s' % m1.name)
+            sys.exit(1)
+        if (m2.charge != 0 or m2.dipole != 0) and m2.alpha is None:
+            print('  error in predicting scaling factor: alpha required for charged or polar fragment: %s' % m2.name)
+            sys.exit(1)
 
         k = self.C0 * self.distance ** 2 * (m1.charge ** 2 / m1.alpha + m2.charge ** 2 / m2.alpha) + \
             self.C1 * (m1.dipole ** 2 / m1.alpha + m2.dipole ** 2 / m2.alpha)
@@ -1506,6 +1508,12 @@ class LJScaler():
         self.dimers = []
 
     def read_scale_inp(self, file):
+        '''
+        Scaling factor can be provided in DIMERS seciton
+        K_SAPT2 section is ignored
+        :param file:
+        :return:
+        '''
         with open(file) as f:
             lines = f.read().splitlines()
 
@@ -1529,7 +1537,7 @@ class LJScaler():
 
             if section == 'MONOMERS':
                 name = words[0].strip('+').strip('-')
-                alpha = -1
+                alpha = None
                 if len(words) > 3:
                     alpha = float(words[3])
                 self.monomers.append(Monomer(name, float(words[1]), float(words[2]), alpha))
@@ -1546,32 +1554,23 @@ class LJScaler():
                 monomer = filter(lambda x: x.name==words[0], self.monomers).__next__()
                 monomer.atoms = words[1:]
 
-        for dimer in self.dimers:
-            if dimer.scale_factor is None:
-                dimer.predict_scale_factor()
-
-
     def pred_scale_factor(self, atom1, atom2):
         '''
-
         :param atom1:
         :param atom2:
-        :return: k = -1 means dimer data not found. will not scale
+        :return: k = None means dimer data not found. will not scale
                  k = positive float means scale normally
         '''
+        m1 = m2 = None
         for monomer in self.monomers:
             if atom1 in monomer.atoms:
                 m1 = monomer
-                break
-        else:
-            print('  error in predicting scaling factor: atom not recognized: %s' % atom1)
-            sys.exit(1)
-
-        for monomer in self.monomers:
             if atom2 in monomer.atoms:
                 m2 = monomer
-                break
-        else:
+        if m1 is None:
+            print('  error in predicting scaling factor: atom not recognized: %s' % atom1)
+            sys.exit(1)
+        if m2 is None:
             print('  error in predicting scaling factor: atom not recognized: %s' % atom2)
             sys.exit(1)
 
@@ -1582,17 +1581,16 @@ class LJScaler():
         else:
             print('  warning: dimer data for \'%s %s\' not found ! Will not scale epsilon: %s %s' %(
                 m1.name, m2.name, atom1, atom2))
-            return -1
+            return None
 
         if dimer.scale_factor is None:
-            print('  error: scale factor cannot be calculated for \' %s %s\'. data missing' %(m1.name, m2.name))
-            sys.exit(1)
+            dimer.predict_scale_factor()
 
         return dimer.scale_factor
 
     def scale_eps(self, term):
         k = self.pred_scale_factor(term.i, term.j)
-        if k == -1:
+        if k is None:
             return
         term.epsilon *= k
         term.extra.append('eps*%.3f' % k )
