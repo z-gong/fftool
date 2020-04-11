@@ -1466,7 +1466,7 @@ class Monomer():
         self.name = name
         self.charge = charge
         self.dipole = dipole
-        self.alpha = alpha  # can be None if not provided
+        self.alpha = alpha or -1  # set to -1 if not provided
         self.atoms = []  # list of atom names
 
     def __repr__(self):
@@ -1491,10 +1491,10 @@ class Dimer():
 
     def predict_scale_factor(self):
         m1, m2 = self.monomer1, self.monomer2
-        if (m1.charge != 0 or m1.dipole != 0) and m1.alpha is None:
+        if (m1.charge != 0 or m1.dipole != 0) and m1.alpha == -1:
             print('  error in predicting scaling factor: alpha required for charged or polar fragment: %s' % m1.name)
             sys.exit(1)
-        if (m2.charge != 0 or m2.dipole != 0) and m2.alpha is None:
+        if (m2.charge != 0 or m2.dipole != 0) and m2.alpha == -1:
             print('  error in predicting scaling factor: alpha required for charged or polar fragment: %s' % m2.name)
             sys.exit(1)
 
