@@ -2542,15 +2542,15 @@ class system(object):
             for sp in self.spec:
                 for im in range(sp.nmol):
                     for ii, at in enumerate(sp.atom):
-                        f.write(" {0:7d} S    {1:<4d} {2:>4s} {3:4s} {4:4s} "
-                                "{5:10.6f} {6:13.4f} {7:11d} {8:13.4f} {9:13.4f}\n".format(
-                                i + 1, nmol + 1, sp.name[:4], at.symbol, at.name,
+                        f.write(" {0:7d} S    {1:<4d} {2:<8s} {3:6s} {4:4s} "
+                                "{5:10.6f} {6:8.4f} {7:4d} {8:8.4f} {9:8.4f}\n".format(
+                                i + 1, nmol + 1, sp.name, at.symbol+str(ii+1), at.name,
                                 at.q - at.qd, at.m - at.md, 0, -at.alpha, at.thole / 2))
                         i += 1
                         if at.drude:
-                            f.write(" {0:7d} S    {1:<4d} {2:>4s} {3:4s} {4:4s} "
-                                    "{5:10.6f} {6:13.4f} {7:11d} {8:13.4f} {9:13.4f}\n".format(
-                                    i + 1, nmol + 1, sp.name[:4], 'D', 'D',
+                            f.write(" {0:7d} S    {1:<4d} {2:<8s} {3:6s} {4:4s} "
+                                    "{5:10.6f} {6:8.4f} {7:4d} {8:8.4f} {9:8.4f}\n".format(
+                                    i + 1, nmol + 1, sp.name, 'DP'+str(ii+1), 'DP',
                                     at.qd, at.md, 0, 0, 0))
                             i += 1
                     nmol += 1
@@ -2631,7 +2631,7 @@ class system(object):
             for i, att in enumerate(self.attype):
                 f.write("  MASS %5i %5s %8.4f\n" % (i + 1, att.name, att.m))
             if self.is_drude:
-                f.write("  MASS %5i %5s %8.4f\n" % (len(self.attype) + 1, 'D', 0.4))
+                f.write("  MASS %5i %5s %8.4f\n" % (len(self.attype) + 1, 'DP', 0.4))
 
 
             f.write('\nBONDS\n')
@@ -2645,7 +2645,7 @@ class system(object):
                     f.write(" %5s %5s %12.6f %12.6f\n" %(
                         *name, bd.par[1] / (2.0 * ecnv), bd.par[0]))
             for att in self.attype_drude:
-                f.write(" %5s %5s %12.6f %12.6f\n" %(att.name, 'D', 500, 0))
+                f.write(" %5s %5s %12.6f %12.6f\n" %(att.name, 'DP', 500, 0))
 
             f.write('\nANGLES\n')
             angle_unique = []
@@ -2693,7 +2693,7 @@ class system(object):
                         0.0, -att.par[1] / ecnv / 2, att.par[0] * 2**(1/6) / 2))
             if self.is_drude:
                 f.write(' %5s %12.6f %12.6f %12.6f %12.6f %12.6f %12.6f\n' % (
-                        'D', 0.0, 0, 0, 0.0, 0, 0))
+                        'DP', 0.0, 0, 0, 0.0, 0, 0))
 
             if self.allpairs:
                 f.write('\nNBFIX\n')
